@@ -342,55 +342,73 @@ function updateSum(){
 
 inputRows.addEventListener('input', updateSum);
 
-// 上限以下・合計金額維持で、上限との差の絶対値合計が最小になる組み合わせを探す
+// 上限以下・合計金額維持で、上限との差の絶対値合計(不足枚数合計)が最小になる組み合わせを探す。
+// 各硬貨は「0枚〜上限枚数」の範囲で自由に選べる(現在の枚数には制約されない)。
+// 個数制限つきナップサックのDPで、金額ごとに「最小gap→同点なら最小総枚数」を求める。
 function solve(cur){
   const cap = {};
   COINS.forEach(c=> cap[c.v]=c.cap);
   const TOTAL = COINS.reduce((s,c)=> s + c.v*cur[c.v], 0);
 
-  if(TOTAL === 0){ return null; }
+  if(TOTAL <= 0){ return null; }
 
-  let best = null;
-  let bestGap = Infinity;
-  let bestCount = Infinity;
+  const NEG = Infinity;
+  const coinsDesc = [500,100,50,10,5,1];
 
-  const v = [500,100,50,10,5,1];
+  // dpLayers[i] = 先頭i種類の硬貨だけを使って各金額を作った場合の {gap, count} テーブル
+  const dpLayers = [ new Array(TOTAL+1).fill(null).map(()=>({gap:NEG, count:NEG})) ];
+  dpLayers[0][0] = {gap:0, count:0};
 
-  // 500,100,50を cur~cap の範囲で増やす方向のみ探索(合計を保つには他を減らす必要があるため)
-  for(let a500=cur[500]; a500<=cap[500]; a500++){
-    for(let a100=cur[100]; a100<=cap[100]; a100++){
-      for(let a50=cur[50]; a50<=cap[50]; a50++){
-        const smallNeeded = TOTAL - a500*500 - a100*100 - a50*50;
-        if(smallNeeded < 0) continue;
-        const max10 = cap[10];
-        const max5  = cap[5];
-        const max1  = cap[1];
-        const maxSmall = max10*10 + max5*5 + max1*1;
-        if(smallNeeded > maxSmall) continue;
-
-        for(let a10=0; a10<=max10; a10++){
-          const rem10 = smallNeeded - a10*10;
-          if(rem10 < 0) continue;
-          if(rem10 > max5*5 + max1*1) continue;
-          for(let a5=0; a5<=max5; a5++){
-            const a1 = rem10 - a5*5;
-            if(a1 < 0 || a1 > max1) continue;
-            const sol = {500:a500,100:a100,50:a50,10:a10,5:a5,1:a1};
-            // 優先度1: 上限との差の合計を最小化
-            const gap = v.reduce((s,coin)=> s + Math.abs(cap[coin]-sol[coin]), 0);
-            // 優先度2(同点のみ): 合計枚数を最小化
-            const count = v.reduce((s,coin)=> s + sol[coin], 0);
-            if(gap < bestGap || (gap === bestGap && count < bestCount)){
-              bestGap = gap;
-              bestCount = count;
-              best = sol;
-            }
-          }
+  coinsDesc.forEach((coin, idx)=>{
+    const capN = cap[coin];
+    const prevLayer = dpLayers[idx];
+    const nextLayer = new Array(TOTAL+1).fill(null).map(()=>({gap:NEG, count:NEG}));
+    for(let amount=0; amount<=TOTAL; amount++){
+      const prev = prevLayer[amount];
+      if(prev.gap === NEG) continue;
+      const maxK = Math.min(capN, Math.floor((TOTAL-amount)/coin));
+      for(let k=0; k<=maxK; k++){
+        const na = amount + k*coin;
+        const addedGap = capN - k; // この硬貨の不足枚数
+        const ng = prev.gap + addedGap;
+        const nc = prev.count + k;
+        const cell = nextLayer[na];
+        if(ng < cell.gap || (ng === cell.gap && nc < cell.count)){
+          nextLayer[na] = {gap:ng, count:nc};
         }
       }
     }
+    dpLayers.push(nextLayer);
+  });
+
+  const final = dpLayers[coinsDesc.length][TOTAL];
+  if(!final || final.gap === NEG) return null;
+
+  // 経路復元: 最後の硬貨から順に、どのk枚を選んだかを逆算する
+  const sol = {};
+  let amount = TOTAL;
+  for(let i=coinsDesc.length-1; i>=0; i--){
+    const coin = coinsDesc[i];
+    const capN = cap[coin];
+    const target = dpLayers[i+1][amount];
+    const maxK = Math.min(capN, Math.floor(amount/coin));
+    let found = false;
+    for(let k=0; k<=maxK; k++){
+      const prevAmount = amount - k*coin;
+      const prevCell = dpLayers[i][prevAmount];
+      if(prevCell.gap === NEG) continue;
+      const addedGap = capN - k;
+      if(prevCell.gap + addedGap === target.gap && prevCell.count + k === target.count){
+        sol[coin] = k;
+        amount = prevAmount;
+        found = true;
+        break;
+      }
+    }
+    if(!found){ sol[coin] = 0; }
   }
-  return {sol:best, total:TOTAL};
+
+  return {sol, total:TOTAL};
 }
 
 function render(result, cur){
