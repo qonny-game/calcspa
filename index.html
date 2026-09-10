@@ -67,6 +67,9 @@
     padding: 18px 16px;
     margin-bottom: 16px;
   }
+  .card.card-table{
+    padding: 18px 10px;
+  }
   .card-title{
     font-size: 14px;
     color: var(--ink-dim);
@@ -91,7 +94,7 @@
   .row:last-child{border-bottom:none;}
 
   .coin-label{
-    width: 54px;
+    width: 46px;
     flex-shrink:0;
     font-size: 14px;
     color: var(--ink);
@@ -106,7 +109,7 @@
   }
 
   input[type=number]{
-    width: 72px;
+    width: 58px;
     flex-shrink:0;
     background: var(--panel-2);
     border: 1px solid var(--line-strong);
@@ -114,7 +117,7 @@
     color: var(--ink);
     font-size: 17px;
     font-family: "SF Mono","Menlo",monospace;
-    padding: 8px 6px;
+    padding: 8px 4px;
     text-align:center;
     -moz-appearance: textfield;
   }
@@ -128,49 +131,78 @@
     background: rgba(199,154,86,0.08);
   }
 
-  .bar-area{
+  .inline-result{
     flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    justify-content:center;
+    gap: 2px;
     min-width:0;
-  }
-  .bar-track{
-    height: 5px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 3px;
-    overflow:hidden;
-    margin-bottom: 5px;
-  }
-  .bar-fill{
-    height:100%;
-    background: var(--brass-dim);
-    border-radius: 3px;
-    transition: width 0.25s ease;
-  }
-  .bar-fill.full{ background: var(--brass); }
-  .bar-caption{
-    font-size: 11px;
-    color: var(--ink-faint);
-    font-family: "SF Mono","Menlo",monospace;
-  }
-
-  .result-block{
-    width: 84px;
-    flex-shrink:0;
     text-align:right;
   }
-  .result-num{
-    font-size: 18px;
+  .inline-result .ir-final{
     font-family:"SF Mono","Menlo",monospace;
+    font-weight:700;
+    font-size: 22px;
+    color: var(--ink);
+    line-height:1.1;
+  }
+  .inline-result .ir-final small{
+    font-size: 13px;
     font-weight:500;
+    color: var(--ink-faint);
+    margin-left:2px;
+  }
+  .inline-result .ir-sub{
+    font-family:"SF Mono","Menlo",monospace;
+    font-weight:700;
+    font-size: 14px;
+    display:flex;
+    gap: 8px;
+  }
+  .inline-result .ir-out{ color: var(--minus); }
+  .inline-result .ir-in{ color: var(--plus); }
+  .inline-result .ir-short{ color: var(--brass); }
+
+  .result-table{
+    width:100%;
+    border-collapse: collapse;
+    font-size: 11.5px;
+    table-layout: fixed;
+  }
+  .result-table th{
+    text-align:center;
+    font-weight:500;
+    color: var(--ink-faint);
+    font-size: 10px;
+    padding: 0 1px 8px;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .result-table th:first-child, .result-table td:first-child{
+    text-align:left;
+    width: 15%;
+  }
+  .result-table td{
+    text-align:center;
+    padding: 9px 1px;
+    border-bottom: 1px solid var(--line);
+    font-family:"SF Mono","Menlo",monospace;
     color: var(--ink);
   }
-  .result-diff{
-    font-size: 11px;
-    font-family:"SF Mono","Menlo",monospace;
-    margin-top: 2px;
+  .result-table tr:last-child td{ border-bottom:none; }
+  .result-table td.coin-name{
+    font-family: inherit;
+    font-weight:500;
+    color: var(--ink);
+    font-size: 12px;
   }
-  .diff-plus{ color: var(--plus); }
-  .diff-minus{ color: var(--minus); }
-  .diff-zero{ color: var(--ink-faint); }
+  .result-table td.diff-plus{ color: var(--plus); }
+  .result-table td.diff-minus{ color: var(--minus); }
+  .result-table td.diff-zero{ color: var(--ink-faint); }
+  .result-table td.short-cell{ color: var(--brass); }
+  .result-table tr.senbiki-row td{ color: var(--brass); }
+  .result-table tr.senbiki-row td.coin-name{ color: var(--brass); }
 
   .total-row{
     display:flex;
@@ -230,27 +262,12 @@
   button:active{ transform: scale(0.98); }
   button.reset{ color: var(--ink-dim); }
 
-  .exchange-list{
-    font-size: 13px;
-    color: var(--ink-dim);
-    line-height: 2;
-  }
-  .exchange-list .ex-row{
-    display:flex;
-    justify-content:space-between;
-    padding: 4px 0;
-    border-bottom: 1px solid var(--line);
-  }
-  .exchange-list .ex-row:last-child{ border-bottom:none; }
-  .exchange-list .ex-coin{ color: var(--ink); }
-  .exchange-list .ex-plus{ color: var(--plus); font-family:"SF Mono","Menlo",monospace; }
-  .exchange-list .ex-minus{ color: var(--minus); font-family:"SF Mono","Menlo",monospace; }
-
   .empty{
-    text-align:center;
-    color: var(--ink-faint);
+    text-align:left;
+    color: var(--ink-dim);
     font-size: 13px;
-    padding: 8px 0;
+    line-height: 1.7;
+    padding: 4px 0;
   }
 </style>
 </head>
@@ -301,6 +318,7 @@ COINS.forEach((c, idx)=>{
   row.innerHTML = `
     <div class="coin-label">${c.label}<small>上限${c.cap}枚</small></div>
     <input type="number" min="0" step="1" inputmode="numeric" enterkeyhint="${hint}" id="in-${c.v}" placeholder="0">
+    <div class="inline-result" id="res-${c.v}"></div>
   `;
   inputRows.appendChild(row);
 });
@@ -342,7 +360,8 @@ function updateSum(){
 
 inputRows.addEventListener('input', updateSum);
 
-// 上限以下・合計金額維持で、上限との差の絶対値合計(不足枚数合計)が最小になる組み合わせを探す。
+// 硬貨は上限以下で、1000円札で埋め合わせできる金額(TOTALとの差が1000の倍数になる金額)の中から、
+// 不足枚数が最小になるものを探す。作りきれなかった残りは1000円札に逃がす。
 // 各硬貨は「0枚〜上限枚数」の範囲で自由に選べる(現在の枚数には制約されない)。
 // 個数制限つきナップサックのDPで、金額ごとに「最小gap→同点なら最小総枚数」を求める。
 function solve(cur){
@@ -350,26 +369,30 @@ function solve(cur){
   COINS.forEach(c=> cap[c.v]=c.cap);
   const TOTAL = COINS.reduce((s,c)=> s + c.v*cur[c.v], 0);
 
-  if(TOTAL <= 0){ return null; }
+  if(TOTAL <= 0){ return {sol:null, total:TOTAL, reason:'empty'}; }
+
+  const capTotal = COINS.reduce((s,c)=> s + c.v*c.cap, 0);
+  const senDenom = 1000;
+  const targetRemainder = TOTAL % senDenom; // 硬貨合計はTOTALと同じ剰余を持つ必要がある
+  const dpMax = Math.min(capTotal, TOTAL);
 
   const NEG = Infinity;
   const coinsDesc = [500,100,50,10,5,1];
 
-  // dpLayers[i] = 先頭i種類の硬貨だけを使って各金額を作った場合の {gap, count} テーブル
-  const dpLayers = [ new Array(TOTAL+1).fill(null).map(()=>({gap:NEG, count:NEG})) ];
+  const dpLayers = [ new Array(dpMax+1).fill(null).map(()=>({gap:NEG, count:NEG})) ];
   dpLayers[0][0] = {gap:0, count:0};
 
   coinsDesc.forEach((coin, idx)=>{
     const capN = cap[coin];
     const prevLayer = dpLayers[idx];
-    const nextLayer = new Array(TOTAL+1).fill(null).map(()=>({gap:NEG, count:NEG}));
-    for(let amount=0; amount<=TOTAL; amount++){
+    const nextLayer = new Array(dpMax+1).fill(null).map(()=>({gap:NEG, count:NEG}));
+    for(let amount=0; amount<=dpMax; amount++){
       const prev = prevLayer[amount];
       if(prev.gap === NEG) continue;
-      const maxK = Math.min(capN, Math.floor((TOTAL-amount)/coin));
+      const maxK = Math.min(capN, Math.floor((dpMax-amount)/coin));
       for(let k=0; k<=maxK; k++){
         const na = amount + k*coin;
-        const addedGap = capN - k; // この硬貨の不足枚数
+        const addedGap = capN - k;
         const ng = prev.gap + addedGap;
         const nc = prev.count + k;
         const cell = nextLayer[na];
@@ -381,12 +404,23 @@ function solve(cur){
     dpLayers.push(nextLayer);
   });
 
-  const final = dpLayers[coinsDesc.length][TOTAL];
-  if(!final || final.gap === NEG) return null;
+  const lastLayer = dpLayers[coinsDesc.length];
+  let bestAmount = -1, bestGap = NEG, bestCount = NEG;
+  for(let amount=dpMax; amount>=0; amount--){
+    if(amount % senDenom !== targetRemainder) continue;
+    const cell = lastLayer[amount];
+    if(cell.gap === NEG) continue;
+    if(cell.gap < bestGap || (cell.gap === bestGap && cell.count < bestCount)){
+      bestGap = cell.gap;
+      bestCount = cell.count;
+      bestAmount = amount;
+    }
+  }
 
-  // 経路復元: 最後の硬貨から順に、どのk枚を選んだかを逆算する
+  if(bestAmount < 0) return {sol:null, total:TOTAL, reason:'no_solution'};
+
   const sol = {};
-  let amount = TOTAL;
+  let amount = bestAmount;
   for(let i=coinsDesc.length-1; i>=0; i--){
     const coin = coinsDesc[i];
     const capN = cap[coin];
@@ -408,76 +442,80 @@ function solve(cur){
     if(!found){ sol[coin] = 0; }
   }
 
-  return {sol, total:TOTAL};
+  const senbiki = TOTAL - bestAmount;
+  return {sol, total:TOTAL, coinTotal:bestAmount, senbiki, senbikiCount: senbiki/senDenom};
 }
 
 function render(result, cur){
   resultArea.innerHTML = '';
+  // 各入力行の右側をいったんクリア
+  COINS.forEach(c=>{
+    const el = document.getElementById('res-'+c.v);
+    if(el) el.innerHTML = '';
+  });
+
   if(!result || !result.sol){
     const empty = document.createElement('div');
     empty.className = 'card';
-    empty.innerHTML = '<p class="empty">枚数を入力して「計算する」を押してください。</p>';
+    let msg = '枚数を入力して「計算する」を押してください。';
+    if(result && result.reason === 'over_cap'){
+      msg = `入力の合計 ${fmt(result.total)} は、上限枚数をすべて使った場合の最大額 ${fmt(result.capTotal)} を超えています。上限内には収まらないので、先に一部を両替して合計を減らしてください。`;
+    } else if(result && result.reason === 'no_solution'){
+      msg = `入力の合計 ${fmt(result.total)} を上限内の組み合わせで作れませんでした。入力内容を見直してください。`;
+    }
+    empty.innerHTML = `<p class="empty">${msg}</p>`;
     resultArea.appendChild(empty);
     return;
   }
   const sol = result.sol;
-  const total = result.total;
+  const coinTotal = result.coinTotal;
   const totalCount = [500,100,50,10,5,1].reduce((s,v)=> s + sol[v], 0);
 
+  // 各入力行の右側に、出す/入れる/最終/上限差を直接書き込む
+  COINS.forEach(c=>{
+    const after = sol[c.v];
+    const diff = after - cur[c.v];
+    const short = c.cap - after;
+    const outVal = diff<0 ? Math.abs(diff) : 0;
+    const inVal = diff>0 ? diff : 0;
+
+    let subHtml = '';
+    if(outVal>0) subHtml += `<span class="ir-out">−${outVal}</span>`;
+    if(inVal>0) subHtml += `<span class="ir-in">+${inVal}</span>`;
+    if(short>0) subHtml += `<span class="ir-short">上限差${short}</span>`;
+
+    const el = document.getElementById('res-'+c.v);
+    if(el){
+      el.innerHTML = `
+        <div class="ir-final">${after}<small>枚</small></div>
+        <div class="ir-sub">${subHtml}</div>
+      `;
+    }
+  });
+
+  // 合計・1000円札・合計枚数だけ下にカードで表示
   const card = document.createElement('div');
   card.className = 'card';
 
-  let rowsHtml = '';
-  COINS.forEach(c=>{
-    const after = sol[c.v];
-    const ratio = Math.min(100, Math.round(after / c.cap * 100));
-    const diff = after - cur[c.v];
-    let diffClass = 'diff-zero', diffText = '±0';
-    if(diff>0){ diffClass='diff-plus'; diffText='+'+diff; }
-    else if(diff<0){ diffClass='diff-minus'; diffText=String(diff); }
-    rowsHtml += `
-      <div class="row">
-        <div class="coin-label">${c.label}</div>
-        <div class="bar-area">
-          <div class="bar-track"><div class="bar-fill ${ratio>=100?'full':''}" style="width:${ratio}%"></div></div>
-          <div class="bar-caption">${after} / ${c.cap}枚</div>
-        </div>
-        <div class="result-block">
-          <div class="result-num">${after}枚</div>
-          <div class="result-diff ${diffClass}">${diffText}</div>
-        </div>
-      </div>
-    `;
-  });
+  const senbikiHtml = result.senbikiCount > 0 ? `
+    <div class="total-row">
+      <span class="t-label">1000円札(合計には含めない)</span>
+      <span class="t-val" style="color:var(--brass);">${result.senbikiCount}枚</span>
+    </div>
+  ` : '';
 
   card.innerHTML = `
-    <p class="card-title">両替後の枚数<span class="sum">${fmt(total)}</span></p>
-    ${rowsHtml}
-    <div class="total-row">
-      <span class="t-label">合計(変更なし)</span>
-      <span class="t-val">${fmt(total)}</span>
+    <div class="total-row" style="border-top:none; padding-top:0; margin-top:0;">
+      <span class="t-label">合計(硬貨のみ)</span>
+      <span class="t-val">${fmt(coinTotal)}</span>
     </div>
-    <div class="total-row" style="border-top:none; padding-top:4px; margin-top:0;">
+    <div class="total-row" style="padding-top:4px;">
       <span class="t-label">合計枚数</span>
       <span class="t-val" style="font-size:15px;">${totalCount}枚</span>
     </div>
+    ${senbikiHtml}
   `;
   resultArea.appendChild(card);
-
-  // 出し入れリスト
-  const moves = COINS.map(c=>({label:c.label, diff: sol[c.v]-cur[c.v]})).filter(m=>m.diff!==0);
-  if(moves.length){
-    const moveCard = document.createElement('div');
-    moveCard.className = 'card';
-    let listHtml = '';
-    moves.forEach(m=>{
-      const cls = m.diff>0 ? 'ex-plus' : 'ex-minus';
-      const text = m.diff>0 ? `+${m.diff}枚 補充` : `${m.diff}枚 抜く`;
-      listHtml += `<div class="ex-row"><span class="ex-coin">${m.label}</span><span class="${cls}">${text}</span></div>`;
-    });
-    moveCard.innerHTML = `<p class="card-title">出し入れリスト</p><div class="exchange-list">${listHtml}</div>`;
-    resultArea.appendChild(moveCard);
-  }
 }
 
 document.getElementById('calcBtn').addEventListener('click', ()=>{
