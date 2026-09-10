@@ -351,9 +351,9 @@ function solve(cur){
   if(TOTAL === 0){ return null; }
 
   let best = null;
-  let bestScore = Infinity;
+  let bestGap = Infinity;
+  let bestCount = Infinity;
 
-  const capArr = COINS.map(c=>c.cap);
   const v = [500,100,50,10,5,1];
 
   // 500,100,50を cur~cap の範囲で増やす方向のみ探索(合計を保つには他を減らす必要があるため)
@@ -376,9 +376,13 @@ function solve(cur){
             const a1 = rem10 - a5*5;
             if(a1 < 0 || a1 > max1) continue;
             const sol = {500:a500,100:a100,50:a50,10:a10,5:a5,1:a1};
-            const score = v.reduce((s,coin)=> s + Math.abs(cap[coin]-sol[coin]), 0);
-            if(score < bestScore){
-              bestScore = score;
+            // 優先度1: 上限との差の合計を最小化
+            const gap = v.reduce((s,coin)=> s + Math.abs(cap[coin]-sol[coin]), 0);
+            // 優先度2(同点のみ): 合計枚数を最小化
+            const count = v.reduce((s,coin)=> s + sol[coin], 0);
+            if(gap < bestGap || (gap === bestGap && count < bestCount)){
+              bestGap = gap;
+              bestCount = count;
               best = sol;
             }
           }
@@ -400,6 +404,7 @@ function render(result, cur){
   }
   const sol = result.sol;
   const total = result.total;
+  const totalCount = [500,100,50,10,5,1].reduce((s,v)=> s + sol[v], 0);
 
   const card = document.createElement('div');
   card.className = 'card';
@@ -434,6 +439,10 @@ function render(result, cur){
       <span class="t-label">合計(変更なし)</span>
       <span class="t-val">${fmt(total)}</span>
     </div>
+    <div class="total-row" style="border-top:none; padding-top:4px; margin-top:0;">
+      <span class="t-label">合計枚数</span>
+      <span class="t-val" style="font-size:15px;">${totalCount}枚</span>
+    </div>
   `;
   resultArea.appendChild(card);
 
@@ -457,6 +466,7 @@ document.getElementById('calcBtn').addEventListener('click', ()=>{
   const cur = getCurrent();
   const result = solve(cur);
   render(result, cur);
+  resultArea.scrollIntoView({behavior:'smooth', block:'start'});
 });
 
 document.getElementById('resetBtn').addEventListener('click', ()=>{
