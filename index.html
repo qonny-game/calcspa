@@ -95,18 +95,18 @@
   }
   .main-table th{
     text-align:center;
-    font-weight:600;
+    font-weight:800;
     color: var(--ink-faint);
-    font-size: 10.5px;
-    padding: 0 2px 10px;
+    font-size: 15px;
+    padding: 0 2px 12px;
     border-bottom: 1px solid var(--line-strong);
   }
-  .main-table th.col-coin{ text-align:left; width: 17%; }
-  .main-table th.col-input{ width: 19%; }
+  .main-table th.col-coin{ text-align:left; width: 20%; }
+  .main-table th.col-input{ width: 18%; }
 
   .main-table td{
     text-align:center;
-    padding: 10px 2px;
+    padding: 12px 2px;
     border-bottom: 1px solid var(--line);
     vertical-align:middle;
   }
@@ -114,15 +114,15 @@
 
   .main-table td.coin-name{
     text-align:left;
-    font-weight:600;
-    font-size: 14px;
+    font-weight:800;
+    font-size: 18px;
     color: var(--ink);
     line-height:1.25;
+    white-space: nowrap;
   }
   .main-table td.coin-name small{
-    display:block;
-    font-size: 9.5px;
-    font-weight:400;
+    font-size: 11px;
+    font-weight:500;
     color: var(--ink-faint);
   }
 
@@ -134,7 +134,7 @@
     border: 1px solid var(--line-strong);
     border-radius: 8px;
     color: var(--ink);
-    font-size: 18px;
+    font-size: 21px;
     font-weight:700;
     font-family: "Cal Sans","SF Mono","Menlo",monospace;
     padding: 8px 2px;
@@ -157,17 +157,17 @@
   .main-table td.res-short{
     font-family:"Cal Sans","SF Mono","Menlo",monospace;
     font-weight:800;
-    font-size: 18px;
+    font-size: 21px;
     color: var(--ink-faint);
   }
   .main-table td.res-out.active{ color: var(--minus); }
   .main-table td.res-in.active{ color: var(--plus); }
-  .main-table td.res-final{ color: var(--ink); font-size:19px; }
-  .main-table td.res-short{ color: var(--brass); font-size:16px; font-weight:700; }
+  .main-table td.res-final{ color: var(--ink); font-size:23px; }
+  .main-table td.res-short{ color: var(--brass); font-size:19px; font-weight:700; }
   .main-table td.res-static{
     font-family:"Cal Sans","SF Mono","Menlo",monospace;
     font-weight:700;
-    font-size: 16px;
+    font-size: 19px;
     color: var(--ink-faint);
   }
   .main-table td#senbiki-final{ color: var(--brass); }
@@ -256,20 +256,20 @@
     <table class="main-table">
       <thead>
         <tr>
-          <th class="col-coin">硬貨</th>
-          <th class="col-input">現在</th>
+          <th class="col-coin">硬</th>
+          <th class="col-input">現</th>
           <th class="col-out">出</th>
           <th class="col-in">入</th>
-          <th class="col-final">最終</th>
-          <th class="col-short">不足分</th>
+          <th class="col-final">終</th>
+          <th class="col-short">不</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td class="coin-name">1000円<small>札</small></td>
           <td class="res-static">-</td>
-          <td class="res-static">-</td>
-          <td class="res-static">-</td>
+          <td class="res-out" id="senbiki-out">-</td>
+          <td class="res-in" id="senbiki-in">-</td>
           <td class="res-final" id="senbiki-final">-</td>
           <td class="res-static">-</td>
         </tr>
@@ -305,7 +305,7 @@ COINS.forEach((c, idx)=>{
   const row = document.createElement('tr');
   const hint = idx === COINS.length-1 ? 'done' : 'next';
   row.innerHTML = `
-    <td class="coin-name">${c.label}<small>上限${c.cap}</small></td>
+    <td class="coin-name">${c.label}</td>
     <td class="input-cell"><input type="number" min="0" step="1" inputmode="numeric" enterkeyhint="${hint}" id="in-${c.v}" placeholder="0"></td>
     <td class="res-out" id="out-${c.v}">-</td>
     <td class="res-in" id="ires-${c.v}">-</td>
@@ -352,8 +352,9 @@ function updateSum(){
 
 inputRows.addEventListener('input', updateSum);
 
-// 硬貨は上限以下で、1000円札で埋め合わせできる金額(TOTALとの差が1000の倍数になる金額)の中から、
-// 不足枚数が最小になるものを探す。作りきれなかった残りは1000円札に逃がす。
+// 硬貨は上限以下で、1000円札とやり取りして埋め合わせできる金額
+// (TOTALとの差が1000の倍数になる金額)の中から、不足枚数が最小になるものを探す。
+// 1000円札は投入(硬貨を増やす)・回収(硬貨の超過分を引き取る)のどちらの方向にも無制限に使える。
 // 各硬貨は「0枚〜上限枚数」の範囲で自由に選べる(現在の枚数には制約されない)。
 // 個数制限つきナップサックのDPで、金額ごとに「最小gap→同点なら最小総枚数」を求める。
 function solve(cur){
@@ -361,12 +362,12 @@ function solve(cur){
   COINS.forEach(c=> cap[c.v]=c.cap);
   const TOTAL = COINS.reduce((s,c)=> s + c.v*cur[c.v], 0);
 
-  if(TOTAL <= 0){ return {sol:null, total:TOTAL, reason:'empty'}; }
+  if(TOTAL < 0){ return {sol:null, total:TOTAL, reason:'empty'}; }
 
   const capTotal = COINS.reduce((s,c)=> s + c.v*c.cap, 0);
   const senDenom = 1000;
   const targetRemainder = TOTAL % senDenom; // 硬貨合計はTOTALと同じ剰余を持つ必要がある
-  const dpMax = Math.min(capTotal, TOTAL);
+  const dpMax = capTotal; // 1000円札を投入すれば上限総額まで硬貨を増やせる
 
   const NEG = Infinity;
   const coinsDesc = [500,100,50,10,5,1];
@@ -434,8 +435,8 @@ function solve(cur){
     if(!found){ sol[coin] = 0; }
   }
 
-  const senbiki = TOTAL - bestAmount;
-  return {sol, total:TOTAL, coinTotal:bestAmount, senbiki, senbikiCount: senbiki/senDenom};
+  const senbiki = TOTAL - bestAmount; // 正: 1000円札を受け取る(回収) / 負: 1000円札を投入する
+  return {sol, total:TOTAL, coinTotal:bestAmount, senbiki, senbikiCount: Math.abs(senbiki)/senDenom, senbikiDir: senbiki>0 ? 'out' : (senbiki<0 ? 'in' : 'none')};
 }
 
 function render(result, cur){
@@ -449,6 +450,10 @@ function render(result, cur){
     document.getElementById('final-'+c.v).textContent = '-';
     document.getElementById('short-'+c.v).textContent = '-';
   });
+  document.getElementById('senbiki-out').textContent = '-';
+  document.getElementById('senbiki-out').className = 'res-out';
+  document.getElementById('senbiki-in').textContent = '-';
+  document.getElementById('senbiki-in').className = 'res-in';
   document.getElementById('senbiki-final').textContent = '-';
 
   if(!result || !result.sol){
@@ -487,8 +492,14 @@ function render(result, cur){
     shortEl.textContent = short>0 ? short : '-';
   });
 
-  if(result.senbikiCount > 0){
-    document.getElementById('senbiki-final').textContent = result.senbikiCount;
+  if(result.senbikiDir === 'out'){
+    const el = document.getElementById('senbiki-out');
+    el.textContent = result.senbikiCount;
+    el.className = 'res-out active';
+  } else if(result.senbikiDir === 'in'){
+    const el = document.getElementById('senbiki-in');
+    el.textContent = result.senbikiCount;
+    el.className = 'res-in active';
   }
 
   // 合計・合計枚数だけ下にカードで表示
@@ -525,6 +536,10 @@ document.getElementById('resetBtn').addEventListener('click', ()=>{
     document.getElementById('final-'+c.v).textContent = '-';
     document.getElementById('short-'+c.v).textContent = '-';
   });
+  document.getElementById('senbiki-out').textContent = '-';
+  document.getElementById('senbiki-out').className = 'res-out';
+  document.getElementById('senbiki-in').textContent = '-';
+  document.getElementById('senbiki-in').className = 'res-in';
   document.getElementById('senbiki-final').textContent = '-';
   updateSum();
   resultArea.innerHTML = '';
