@@ -362,9 +362,9 @@ function solve(cur){
       for(let a50=cur[50]; a50<=cap[50]; a50++){
         const smallNeeded = TOTAL - a500*500 - a100*100 - a50*50;
         if(smallNeeded < 0) continue;
-        const max10 = Math.min(cur[10], cap[10]);
-        const max5  = Math.min(cur[5],  cap[5]);
-        const max1  = Math.min(cur[1],  cap[1]);
+        const max10 = cap[10];
+        const max5  = cap[5];
+        const max1  = cap[1];
         const maxSmall = max10*10 + max5*5 + max1*1;
         if(smallNeeded > maxSmall) continue;
 
