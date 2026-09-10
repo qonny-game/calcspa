@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>両替プランナー</title>
+<style>
+  :root{
+    --bg: #0F2A22;
+    --panel: #163B30;
+    --panel-2: #1D4A3C;
+    --line: rgba(255,255,255,0.08);
+    --line-strong: rgba(255,255,255,0.16);
+    --ink: #F4EFE4;
+    --ink-dim: #A8C2B6;
+    --ink-faint: #6E8B7D;
+    --brass: #C79A56;
+    --brass-dim: #8A7043;
+    --brass-bg: rgba(199,154,86,0.14);
+    --minus: #D97D6C;
+    --minus-bg: rgba(217,125,108,0.14);
+    --plus: #7FBFA0;
+    --plus-bg: rgba(127,191,160,0.14);
+    --radius: 14px;
+    font-size: 16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Hiragino Sans","Yu Gothic",-apple-system,BlinkMacSystemFont,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  .wrap{
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 28px 18px 48px;
+  }
+  .head{
+    margin-bottom: 22px;
+  }
+  .head .eyebrow{
+    font-size: 13px;
+    color: var(--brass);
+    letter-spacing: 0.02em;
+    margin: 0 0 4px;
+  }
+  .head h1{
+    font-size: 22px;
+    font-weight: 500;
+    margin: 0 0 6px;
+    color: var(--ink);
+  }
+  .head p{
+    font-size: 14px;
+    color: var(--ink-dim);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .card{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 16px;
+    margin-bottom: 16px;
+  }
+  .card-title{
+    font-size: 14px;
+    color: var(--ink-dim);
+    margin: 0 0 14px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+  }
+  .card-title .sum{
+    font-family: "SF Mono","Menlo",monospace;
+    font-size: 13px;
+    color: var(--brass);
+  }
+
+  .row{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .row:last-child{border-bottom:none;}
+
+  .coin-label{
+    width: 54px;
+    flex-shrink:0;
+    font-size: 14px;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .coin-label small{
+    display:block;
+    font-size: 11px;
+    color: var(--ink-faint);
+    font-weight:400;
+    margin-top:1px;
+  }
+
+  input[type=number]{
+    width: 72px;
+    flex-shrink:0;
+    background: var(--panel-2);
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    color: var(--ink);
+    font-size: 17px;
+    font-family: "SF Mono","Menlo",monospace;
+    padding: 8px 6px;
+    text-align:center;
+    -moz-appearance: textfield;
+  }
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button{
+    -webkit-appearance:none;margin:0;
+  }
+  input[type=number]:focus{
+    outline:none;
+    border-color: var(--brass);
+    background: rgba(199,154,86,0.08);
+  }
+
+  .bar-area{
+    flex:1;
+    min-width:0;
+  }
+  .bar-track{
+    height: 5px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    overflow:hidden;
+    margin-bottom: 5px;
+  }
+  .bar-fill{
+    height:100%;
+    background: var(--brass-dim);
+    border-radius: 3px;
+    transition: width 0.25s ease;
+  }
+  .bar-fill.full{ background: var(--brass); }
+  .bar-caption{
+    font-size: 11px;
+    color: var(--ink-faint);
+    font-family: "SF Mono","Menlo",monospace;
+  }
+
+  .result-block{
+    width: 84px;
+    flex-shrink:0;
+    text-align:right;
+  }
+  .result-num{
+    font-size: 18px;
+    font-family:"SF Mono","Menlo",monospace;
+    font-weight:500;
+    color: var(--ink);
+  }
+  .result-diff{
+    font-size: 11px;
+    font-family:"SF Mono","Menlo",monospace;
+    margin-top: 2px;
+  }
+  .diff-plus{ color: var(--plus); }
+  .diff-minus{ color: var(--minus); }
+  .diff-zero{ color: var(--ink-faint); }
+
+  .total-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding-top: 14px;
+    margin-top: 4px;
+    border-top: 1px solid var(--line-strong);
+  }
+  .total-row .t-label{
+    font-size: 13px;
+    color: var(--ink-dim);
+  }
+  .total-row .t-val{
+    font-size: 20px;
+    font-family:"SF Mono","Menlo",monospace;
+    font-weight:500;
+    color: var(--ink);
+  }
+
+  .note-bar{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    background: var(--brass-bg);
+    border: 1px solid rgba(199,154,86,0.3);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--ink);
+    line-height:1.6;
+  }
+  .note-bar .num{
+    font-family:"SF Mono","Menlo",monospace;
+    font-size: 17px;
+    font-weight:500;
+    color: var(--brass);
+    flex-shrink:0;
+  }
+
+  .actions{
+    display:flex;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  button{
+    flex:1;
+    background: var(--panel-2);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    color: var(--ink);
+    font-size: 14px;
+    padding: 12px;
+    font-family: inherit;
+  }
+  button:active{ transform: scale(0.98); }
+  button.reset{ color: var(--ink-dim); }
+
+  .exchange-list{
+    font-size: 13px;
+    color: var(--ink-dim);
+    line-height: 2;
+  }
+  .exchange-list .ex-row{
+    display:flex;
+    justify-content:space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .exchange-list .ex-row:last-child{ border-bottom:none; }
+  .exchange-list .ex-coin{ color: var(--ink); }
+  .exchange-list .ex-plus{ color: var(--plus); font-family:"SF Mono","Menlo",monospace; }
+  .exchange-list .ex-minus{ color: var(--minus); font-family:"SF Mono","Menlo",monospace; }
+
+  .empty{
+    text-align:center;
+    color: var(--ink-faint);
+    font-size: 13px;
+    padding: 8px 0;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <p class="eyebrow">レジ精算ツール</p>
+    <h1>両替プランナー</h1>
+    <p>いまの硬貨枚数を入れると、上限枚数にいちばん近づく組み合わせを自動で出します。</p>
+  </div>
+
+  <div class="card">
+    <p class="card-title">
+      いまの枚数
+      <span class="sum" id="curSum">¥0</span>
+    </p>
+    <div id="inputRows"></div>
+  </div>
+
+  <div class="actions">
+    <button id="calcBtn">計算する</button>
+    <button id="resetBtn" class="reset">クリア</button>
+  </div>
+
+  <div id="resultArea"></div>
+
+</div>
+
+<script>
+const COINS = [
+  {v:500, label:"500円", cap:26},
+  {v:100, label:"100円", cap:50},
+  {v:50,  label:"50円",  cap:26},
+  {v:10,  label:"10円",  cap:50},
+  {v:5,   label:"5円",   cap:30},
+  {v:1,   label:"1円",   cap:50},
+];
+
+const inputRows = document.getElementById('inputRows');
+const curSumEl = document.getElementById('curSum');
+const resultArea = document.getElementById('resultArea');
+
+COINS.forEach((c, idx)=>{
+  const row = document.createElement('div');
+  row.className = 'row';
+  const hint = idx === COINS.length-1 ? 'done' : 'next';
+  row.innerHTML = `
+    <div class="coin-label">${c.label}<small>上限${c.cap}枚</small></div>
+    <input type="number" min="0" step="1" inputmode="numeric" enterkeyhint="${hint}" id="in-${c.v}" placeholder="0">
+  `;
+  inputRows.appendChild(row);
+});
+
+// Enter(スマホの「次へ」キー)で次の入力欄に自動フォーカス。最後の欄では計算を実行してキーボードを閉じる
+COINS.forEach((c, idx)=>{
+  const el = document.getElementById('in-'+c.v);
+  el.addEventListener('keydown', (e)=>{
+    if(e.key !== 'Enter') return;
+    e.preventDefault();
+    const next = COINS[idx+1];
+    if(next){
+      document.getElementById('in-'+next.v).focus();
+    } else {
+      el.blur();
+      document.getElementById('calcBtn').click();
+    }
+  });
+});
+
+function fmt(n){ return '¥' + n.toLocaleString('ja-JP'); }
+
+function getCurrent(){
+  const cur = {};
+  COINS.forEach(c=>{
+    const el = document.getElementById('in-'+c.v);
+    const val = parseInt(el.value,10);
+    cur[c.v] = isNaN(val) || val<0 ? 0 : val;
+  });
+  return cur;
+}
+
+function updateSum(){
+  const cur = getCurrent();
+  let total = 0;
+  COINS.forEach(c=> total += c.v*cur[c.v]);
+  curSumEl.textContent = fmt(total);
+}
+
+inputRows.addEventListener('input', updateSum);
+
+// 上限以下・合計金額維持で、上限との差の絶対値合計が最小になる組み合わせを探す
+function solve(cur){
+  const cap = {};
+  COINS.forEach(c=> cap[c.v]=c.cap);
+  const TOTAL = COINS.reduce((s,c)=> s + c.v*cur[c.v], 0);
+
+  if(TOTAL === 0){ return null; }
+
+  let best = null;
+  let bestScore = Infinity;
+
+  const capArr = COINS.map(c=>c.cap);
+  const v = [500,100,50,10,5,1];
+
+  // 500,100,50を cur~cap の範囲で増やす方向のみ探索(合計を保つには他を減らす必要があるため)
+  for(let a500=cur[500]; a500<=cap[500]; a500++){
+    for(let a100=cur[100]; a100<=cap[100]; a100++){
+      for(let a50=cur[50]; a50<=cap[50]; a50++){
+        const smallNeeded = TOTAL - a500*500 - a100*100 - a50*50;
+        if(smallNeeded < 0) continue;
+        const max10 = Math.min(cur[10], cap[10]);
+        const max5  = Math.min(cur[5],  cap[5]);
+        const max1  = Math.min(cur[1],  cap[1]);
+        const maxSmall = max10*10 + max5*5 + max1*1;
+        if(smallNeeded > maxSmall) continue;
+
+        for(let a10=0; a10<=max10; a10++){
+          const rem10 = smallNeeded - a10*10;
+          if(rem10 < 0) continue;
+          if(rem10 > max5*5 + max1*1) continue;
+          for(let a5=0; a5<=max5; a5++){
+            const a1 = rem10 - a5*5;
+            if(a1 < 0 || a1 > max1) continue;
+            const sol = {500:a500,100:a100,50:a50,10:a10,5:a5,1:a1};
+            const score = v.reduce((s,coin)=> s + Math.abs(cap[coin]-sol[coin]), 0);
+            if(score < bestScore){
+              bestScore = score;
+              best = sol;
+            }
+          }
+        }
+      }
+    }
+  }
+  return {sol:best, total:TOTAL};
+}
+
+function render(result, cur){
+  resultArea.innerHTML = '';
+  if(!result || !result.sol){
+    const empty = document.createElement('div');
+    empty.className = 'card';
+    empty.innerHTML = '<p class="empty">枚数を入力して「計算する」を押してください。</p>';
+    resultArea.appendChild(empty);
+    return;
+  }
+  const sol = result.sol;
+  const total = result.total;
+
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  let rowsHtml = '';
+  COINS.forEach(c=>{
+    const after = sol[c.v];
+    const ratio = Math.min(100, Math.round(after / c.cap * 100));
+    const diff = after - cur[c.v];
+    let diffClass = 'diff-zero', diffText = '±0';
+    if(diff>0){ diffClass='diff-plus'; diffText='+'+diff; }
+    else if(diff<0){ diffClass='diff-minus'; diffText=String(diff); }
+    rowsHtml += `
+      <div class="row">
+        <div class="coin-label">${c.label}</div>
+        <div class="bar-area">
+          <div class="bar-track"><div class="bar-fill ${ratio>=100?'full':''}" style="width:${ratio}%"></div></div>
+          <div class="bar-caption">${after} / ${c.cap}枚</div>
+        </div>
+        <div class="result-block">
+          <div class="result-num">${after}枚</div>
+          <div class="result-diff ${diffClass}">${diffText}</div>
+        </div>
+      </div>
+    `;
+  });
+
+  card.innerHTML = `
+    <p class="card-title">両替後の枚数<span class="sum">${fmt(total)}</span></p>
+    ${rowsHtml}
+    <div class="total-row">
+      <span class="t-label">合計(変更なし)</span>
+      <span class="t-val">${fmt(total)}</span>
+    </div>
+  `;
+  resultArea.appendChild(card);
+
+  // 出し入れリスト
+  const moves = COINS.map(c=>({label:c.label, diff: sol[c.v]-cur[c.v]})).filter(m=>m.diff!==0);
+  if(moves.length){
+    const moveCard = document.createElement('div');
+    moveCard.className = 'card';
+    let listHtml = '';
+    moves.forEach(m=>{
+      const cls = m.diff>0 ? 'ex-plus' : 'ex-minus';
+      const text = m.diff>0 ? `+${m.diff}枚 補充` : `${m.diff}枚 抜く`;
+      listHtml += `<div class="ex-row"><span class="ex-coin">${m.label}</span><span class="${cls}">${text}</span></div>`;
+    });
+    moveCard.innerHTML = `<p class="card-title">出し入れリスト</p><div class="exchange-list">${listHtml}</div>`;
+    resultArea.appendChild(moveCard);
+  }
+}
+
+document.getElementById('calcBtn').addEventListener('click', ()=>{
+  const cur = getCurrent();
+  const result = solve(cur);
+  render(result, cur);
+});
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  COINS.forEach(c=>{ document.getElementById('in-'+c.v).value=''; });
+  updateSum();
+  resultArea.innerHTML = '';
+});
+
+updateSum();
+</script>
+</body>
+</html>
