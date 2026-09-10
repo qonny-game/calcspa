@@ -435,8 +435,8 @@ function solve(cur){
     if(!found){ sol[coin] = 0; }
   }
 
-  const senbiki = TOTAL - bestAmount; // 正: 1000円札を受け取る(回収) / 負: 1000円札を投入する
-  return {sol, total:TOTAL, coinTotal:bestAmount, senbiki, senbikiCount: Math.abs(senbiki)/senDenom, senbikiDir: senbiki>0 ? 'out' : (senbiki<0 ? 'in' : 'none')};
+  const senbiki = TOTAL - bestAmount; // 正: 硬貨がTOTALより不足 → 1000円札を投入(入) / 負: 硬貨がTOTALを超過 → 1000円札を受け取る(出)
+  return {sol, total:TOTAL, coinTotal:bestAmount, senbiki, senbikiCount: Math.abs(senbiki)/senDenom, senbikiDir: senbiki>0 ? 'in' : (senbiki<0 ? 'out' : 'none')};
 }
 
 function render(result, cur){
