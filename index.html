@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>両替プランナー</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cal+Sans&family=Noto+Sans+JP:wght@700;800&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg: #0F2A22;
@@ -29,7 +32,8 @@
     margin:0;padding:0;
     background: var(--bg);
     color: var(--ink);
-    font-family: "Hiragino Sans","Yu Gothic",-apple-system,BlinkMacSystemFont,sans-serif;
+    font-family: "Noto Sans JP","Hiragino Sans","Yu Gothic",-apple-system,BlinkMacSystemFont,sans-serif;
+    font-weight: 700;
     -webkit-font-smoothing:antialiased;
     min-height:100vh;
   }
@@ -79,45 +83,61 @@
     justify-content:space-between;
   }
   .card-title .sum{
-    font-family: "SF Mono","Menlo",monospace;
+    font-family: "Cal Sans","SF Mono","Menlo",monospace;
     font-size: 13px;
     color: var(--brass);
   }
 
-  .row{
-    display:flex;
-    align-items:center;
-    gap: 10px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--line);
+  .main-table{
+    width:100%;
+    border-collapse: collapse;
+    table-layout: fixed;
   }
-  .row:last-child{border-bottom:none;}
+  .main-table th{
+    text-align:center;
+    font-weight:600;
+    color: var(--ink-faint);
+    font-size: 10.5px;
+    padding: 0 2px 10px;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .main-table th.col-coin{ text-align:left; width: 17%; }
+  .main-table th.col-input{ width: 19%; }
 
-  .coin-label{
-    width: 46px;
-    flex-shrink:0;
+  .main-table td{
+    text-align:center;
+    padding: 10px 2px;
+    border-bottom: 1px solid var(--line);
+    vertical-align:middle;
+  }
+  .main-table tr:last-child td{ border-bottom:none; }
+
+  .main-table td.coin-name{
+    text-align:left;
+    font-weight:600;
     font-size: 14px;
     color: var(--ink);
-    font-weight: 500;
+    line-height:1.25;
   }
-  .coin-label small{
+  .main-table td.coin-name small{
     display:block;
-    font-size: 11px;
-    color: var(--ink-faint);
+    font-size: 9.5px;
     font-weight:400;
-    margin-top:1px;
+    color: var(--ink-faint);
   }
 
+  .main-table td.input-cell{ padding: 6px 2px; }
   input[type=number]{
-    width: 58px;
-    flex-shrink:0;
+    width: 100%;
+    max-width: 62px;
     background: var(--panel-2);
     border: 1px solid var(--line-strong);
     border-radius: 8px;
     color: var(--ink);
-    font-size: 17px;
-    font-family: "SF Mono","Menlo",monospace;
-    padding: 8px 4px;
+    font-size: 18px;
+    font-weight:700;
+    font-family: "Cal Sans","SF Mono","Menlo",monospace;
+    padding: 8px 2px;
     text-align:center;
     -moz-appearance: textfield;
   }
@@ -131,78 +151,26 @@
     background: rgba(199,154,86,0.08);
   }
 
-  .inline-result{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    align-items:flex-end;
-    justify-content:center;
-    gap: 2px;
-    min-width:0;
-    text-align:right;
-  }
-  .inline-result .ir-final{
-    font-family:"SF Mono","Menlo",monospace;
-    font-weight:700;
-    font-size: 22px;
-    color: var(--ink);
-    line-height:1.1;
-  }
-  .inline-result .ir-final small{
-    font-size: 13px;
-    font-weight:500;
+  .main-table td.res-out,
+  .main-table td.res-in,
+  .main-table td.res-final,
+  .main-table td.res-short{
+    font-family:"Cal Sans","SF Mono","Menlo",monospace;
+    font-weight:800;
+    font-size: 18px;
     color: var(--ink-faint);
-    margin-left:2px;
   }
-  .inline-result .ir-sub{
-    font-family:"SF Mono","Menlo",monospace;
+  .main-table td.res-out.active{ color: var(--minus); }
+  .main-table td.res-in.active{ color: var(--plus); }
+  .main-table td.res-final{ color: var(--ink); font-size:19px; }
+  .main-table td.res-short{ color: var(--brass); font-size:16px; font-weight:700; }
+  .main-table td.res-static{
+    font-family:"Cal Sans","SF Mono","Menlo",monospace;
     font-weight:700;
-    font-size: 14px;
-    display:flex;
-    gap: 8px;
-  }
-  .inline-result .ir-out{ color: var(--minus); }
-  .inline-result .ir-in{ color: var(--plus); }
-  .inline-result .ir-short{ color: var(--brass); }
-
-  .result-table{
-    width:100%;
-    border-collapse: collapse;
-    font-size: 11.5px;
-    table-layout: fixed;
-  }
-  .result-table th{
-    text-align:center;
-    font-weight:500;
+    font-size: 16px;
     color: var(--ink-faint);
-    font-size: 10px;
-    padding: 0 1px 8px;
-    border-bottom: 1px solid var(--line-strong);
   }
-  .result-table th:first-child, .result-table td:first-child{
-    text-align:left;
-    width: 15%;
-  }
-  .result-table td{
-    text-align:center;
-    padding: 9px 1px;
-    border-bottom: 1px solid var(--line);
-    font-family:"SF Mono","Menlo",monospace;
-    color: var(--ink);
-  }
-  .result-table tr:last-child td{ border-bottom:none; }
-  .result-table td.coin-name{
-    font-family: inherit;
-    font-weight:500;
-    color: var(--ink);
-    font-size: 12px;
-  }
-  .result-table td.diff-plus{ color: var(--plus); }
-  .result-table td.diff-minus{ color: var(--minus); }
-  .result-table td.diff-zero{ color: var(--ink-faint); }
-  .result-table td.short-cell{ color: var(--brass); }
-  .result-table tr.senbiki-row td{ color: var(--brass); }
-  .result-table tr.senbiki-row td.coin-name{ color: var(--brass); }
+  .main-table td#senbiki-final{ color: var(--brass); }
 
   .total-row{
     display:flex;
@@ -218,7 +186,7 @@
   }
   .total-row .t-val{
     font-size: 20px;
-    font-family:"SF Mono","Menlo",monospace;
+    font-family:"Cal Sans","SF Mono","Menlo",monospace;
     font-weight:500;
     color: var(--ink);
   }
@@ -237,7 +205,7 @@
     line-height:1.6;
   }
   .note-bar .num{
-    font-family:"SF Mono","Menlo",monospace;
+    font-family:"Cal Sans","SF Mono","Menlo",monospace;
     font-size: 17px;
     font-weight:500;
     color: var(--brass);
@@ -280,12 +248,34 @@
     <p>いまの硬貨枚数を入れると、上限枚数にいちばん近づく組み合わせを自動で出します。</p>
   </div>
 
-  <div class="card">
+  <div class="card card-table">
     <p class="card-title">
       いまの枚数
       <span class="sum" id="curSum">¥0</span>
     </p>
-    <div id="inputRows"></div>
+    <table class="main-table">
+      <thead>
+        <tr>
+          <th class="col-coin">硬貨</th>
+          <th class="col-input">現在</th>
+          <th class="col-out">出</th>
+          <th class="col-in">入</th>
+          <th class="col-final">最終</th>
+          <th class="col-short">不足分</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="coin-name">1000円<small>札</small></td>
+          <td class="res-static">-</td>
+          <td class="res-static">-</td>
+          <td class="res-static">-</td>
+          <td class="res-final" id="senbiki-final">-</td>
+          <td class="res-static">-</td>
+        </tr>
+      </tbody>
+      <tbody id="inputRows"></tbody>
+    </table>
   </div>
 
   <div class="actions">
@@ -312,13 +302,15 @@ const curSumEl = document.getElementById('curSum');
 const resultArea = document.getElementById('resultArea');
 
 COINS.forEach((c, idx)=>{
-  const row = document.createElement('div');
-  row.className = 'row';
+  const row = document.createElement('tr');
   const hint = idx === COINS.length-1 ? 'done' : 'next';
   row.innerHTML = `
-    <div class="coin-label">${c.label}<small>上限${c.cap}枚</small></div>
-    <input type="number" min="0" step="1" inputmode="numeric" enterkeyhint="${hint}" id="in-${c.v}" placeholder="0">
-    <div class="inline-result" id="res-${c.v}"></div>
+    <td class="coin-name">${c.label}<small>上限${c.cap}</small></td>
+    <td class="input-cell"><input type="number" min="0" step="1" inputmode="numeric" enterkeyhint="${hint}" id="in-${c.v}" placeholder="0"></td>
+    <td class="res-out" id="out-${c.v}">-</td>
+    <td class="res-in" id="ires-${c.v}">-</td>
+    <td class="res-final" id="final-${c.v}">-</td>
+    <td class="res-short" id="short-${c.v}">-</td>
   `;
   inputRows.appendChild(row);
 });
@@ -448,11 +440,16 @@ function solve(cur){
 
 function render(result, cur){
   resultArea.innerHTML = '';
-  // 各入力行の右側をいったんクリア
+  // 各行の計算結果セルをいったんクリア
   COINS.forEach(c=>{
-    const el = document.getElementById('res-'+c.v);
-    if(el) el.innerHTML = '';
+    document.getElementById('out-'+c.v).textContent = '-';
+    document.getElementById('out-'+c.v).className = 'res-out';
+    document.getElementById('ires-'+c.v).textContent = '-';
+    document.getElementById('ires-'+c.v).className = 'res-in';
+    document.getElementById('final-'+c.v).textContent = '-';
+    document.getElementById('short-'+c.v).textContent = '-';
   });
+  document.getElementById('senbiki-final').textContent = '-';
 
   if(!result || !result.sol){
     const empty = document.createElement('div');
@@ -471,7 +468,7 @@ function render(result, cur){
   const coinTotal = result.coinTotal;
   const totalCount = [500,100,50,10,5,1].reduce((s,v)=> s + sol[v], 0);
 
-  // 各入力行の右側に、出す/入れる/最終/上限差を直接書き込む
+  // 各行のセルに、出す/入れる/最終/上限差を書き込む
   COINS.forEach(c=>{
     const after = sol[c.v];
     const diff = after - cur[c.v];
@@ -479,30 +476,24 @@ function render(result, cur){
     const outVal = diff<0 ? Math.abs(diff) : 0;
     const inVal = diff>0 ? diff : 0;
 
-    let subHtml = '';
-    if(outVal>0) subHtml += `<span class="ir-out">−${outVal}</span>`;
-    if(inVal>0) subHtml += `<span class="ir-in">+${inVal}</span>`;
-    if(short>0) subHtml += `<span class="ir-short">上限差${short}</span>`;
+    const outEl = document.getElementById('out-'+c.v);
+    const inEl = document.getElementById('ires-'+c.v);
+    const finalEl = document.getElementById('final-'+c.v);
+    const shortEl = document.getElementById('short-'+c.v);
 
-    const el = document.getElementById('res-'+c.v);
-    if(el){
-      el.innerHTML = `
-        <div class="ir-final">${after}<small>枚</small></div>
-        <div class="ir-sub">${subHtml}</div>
-      `;
-    }
+    if(outVal>0){ outEl.textContent = outVal; outEl.className = 'res-out active'; }
+    if(inVal>0){ inEl.textContent = inVal; inEl.className = 'res-in active'; }
+    finalEl.textContent = after;
+    shortEl.textContent = short>0 ? short : '-';
   });
 
-  // 合計・1000円札・合計枚数だけ下にカードで表示
+  if(result.senbikiCount > 0){
+    document.getElementById('senbiki-final').textContent = result.senbikiCount;
+  }
+
+  // 合計・合計枚数だけ下にカードで表示
   const card = document.createElement('div');
   card.className = 'card';
-
-  const senbikiHtml = result.senbikiCount > 0 ? `
-    <div class="total-row">
-      <span class="t-label">1000円札(合計には含めない)</span>
-      <span class="t-val" style="color:var(--brass);">${result.senbikiCount}枚</span>
-    </div>
-  ` : '';
 
   card.innerHTML = `
     <div class="total-row" style="border-top:none; padding-top:0; margin-top:0;">
@@ -513,7 +504,6 @@ function render(result, cur){
       <span class="t-label">合計枚数</span>
       <span class="t-val" style="font-size:15px;">${totalCount}枚</span>
     </div>
-    ${senbikiHtml}
   `;
   resultArea.appendChild(card);
 }
@@ -526,7 +516,16 @@ document.getElementById('calcBtn').addEventListener('click', ()=>{
 });
 
 document.getElementById('resetBtn').addEventListener('click', ()=>{
-  COINS.forEach(c=>{ document.getElementById('in-'+c.v).value=''; });
+  COINS.forEach(c=>{
+    document.getElementById('in-'+c.v).value='';
+    document.getElementById('out-'+c.v).textContent = '-';
+    document.getElementById('out-'+c.v).className = 'res-out';
+    document.getElementById('ires-'+c.v).textContent = '-';
+    document.getElementById('ires-'+c.v).className = 'res-in';
+    document.getElementById('final-'+c.v).textContent = '-';
+    document.getElementById('short-'+c.v).textContent = '-';
+  });
+  document.getElementById('senbiki-final').textContent = '-';
   updateSum();
   resultArea.innerHTML = '';
 });
